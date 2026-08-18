@@ -421,8 +421,9 @@ repository.
   repository come from this deposit.
 - [GEO accession GSE299631](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE299631),
   the raw sequencing record reported by the study.
-- [Original study code](https://github.com/rottenberglab/residual-disease),
-  released by the authors for their published analyses.
+- [Authors' residual-disease code repository](https://github.com/rottenberglab/residual-disease),
+  cited in the paper's Code availability section and released for the original
+  published analyses.
 - Túrós *et al.* (2024), [Chrysalis: decoding tissue compartments in spatial
   transcriptomics with archetypal
   analysis](https://doi.org/10.1038/s42003-024-07165-7), *Communications
@@ -488,5 +489,20 @@ repository.
   [Streamlit](https://docs.streamlit.io/).
 - Configuration files: [PyYAML documentation](https://pyyaml.org/wiki/PyYAMLDocumentation).
 
-The declared software dependencies and minimum versions are recorded in
-[`requirements.txt`](requirements.txt).
+### Reproducible software environment
+
+The analyses, figures and application were generated and checked with Python
+3.14.0 and the following direct dependencies:
+
+```text
+anndata 0.12.9          matplotlib 3.10.7    numpy 2.3.5
+pandas 2.3.3            Pillow 12.0.0         PyYAML 6.0.3
+Scanpy 1.12             scikit-learn 1.7.2   SciPy 1.16.3
+seaborn 0.13.2          Streamlit 1.61.1     umap-learn 0.5.11
+```
+
+These exact runtime versions are pinned in [`requirements.txt`](requirements.txt).
+The test environment adds pytest 9.1.1 through
+[`requirements-dev.txt`](requirements-dev.txt). This records the environment
+used for the reported results instead of silently allowing later package
+versions to change the analysis.
