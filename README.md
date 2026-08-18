@@ -399,3 +399,94 @@ The app opens at `http://localhost:8507`.
 - Cell-type summaries used as ML features cannot serve as independent validation.
 - Histology and paper-derived gene programmes provide the less circular evidence.
 - The second treatment arm is internal rather than external validation.
+
+## References and documentation
+
+The workflow uses the processed mouse Visium objects released with the study.
+It does not rerun Chrysalis or cell2location: their compartment scores,
+cell-type estimates and biological annotations were produced upstream by the
+authors and are treated here as input data. The perturbation profiles, Ward
+clustering and reliability analyses are implemented independently in this
+repository.
+
+### Study and data
+
+- Túrós *et al.* (2026), [Spatiotemporal organisation of residual disease in
+  mouse and human BRCA1-deficient mammary tumours and breast
+  cancer](https://doi.org/10.1038/s41467-026-74125-6), *Nature
+  Communications*. This is the source paper for the biological question,
+  experimental design and niche annotations.
+- [Processed spatial transcriptomics data](https://doi.org/10.5281/zenodo.15102983),
+  Zenodo record 15102983. The mouse Visium `.h5ad` files analysed in this
+  repository come from this deposit.
+- [GEO accession GSE299631](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE299631),
+  the raw sequencing record reported by the study.
+- [Original study code](https://github.com/rottenberglab/residual-disease),
+  released by the authors for their published analyses.
+- Túrós *et al.* (2024), [Chrysalis: decoding tissue compartments in spatial
+  transcriptomics with archetypal
+  analysis](https://doi.org/10.1038/s42003-024-07165-7), *Communications
+  Biology*. Chrysalis generated the continuous niche scores available in the
+  processed objects.
+- Kleshchevnikov *et al.* (2022), [Cell2location maps fine-grained cell types
+  in spatial transcriptomics](https://doi.org/10.1038/s41587-021-01139-4),
+  *Nature Biotechnology*. Cell2location generated the cell-type estimates used
+  by the original study to help interpret the niches.
+
+### Statistical methods
+
+- Ward (1963), [Hierarchical Grouping to Optimize an Objective
+  Function](https://doi.org/10.1080/01621459.1963.10500845), introduced Ward's
+  minimum-variance hierarchical clustering criterion.
+- Aitchison (1982), [The Statistical Analysis of Compositional
+  Data](https://doi.org/10.1111/j.2517-6161.1982.tb01195.x), provides the
+  framework for analysing proportions through log-ratios rather than raw
+  Euclidean differences.
+- Rousseeuw (1987), [Silhouettes: A graphical aid to the interpretation and
+  validation of cluster analysis](https://doi.org/10.1016/0377-0427(87)90125-7),
+  defines the silhouette used to compare values of $k$.
+- Hubert and Arabie (1985), [Comparing
+  partitions](https://doi.org/10.1007/BF01908075), defines the adjusted Rand
+  index used to compare cluster assignments after refitting.
+- Monti *et al.* (2003), [Consensus Clustering: A Resampling-Based Method for
+  Class Discovery and Visualization of Gene Expression Microarray
+  Data](https://doi.org/10.1023/A:1023949509487), provides the resampling logic
+  behind the consensus matrix.
+- Efron (1979), [Bootstrap Methods: Another Look at the
+  Jackknife](https://doi.org/10.1214/aos/1176344552), is the basis for the
+  tumour-level bootstrap confidence intervals and stability checks.
+- Spearman (1904), [The Proof and Measurement of Association between Two
+  Things](https://doi.org/10.2307/1412159), introduced the rank correlation
+  used to compare niche response orders between treatment arms.
+- Phipson and Smyth (2010), [Permutation P-values Should Never Be
+  Zero](https://doi.org/10.2202/1544-6115.1585), supports the finite-sample
+  correction $(b+1)/(B+1)$ used for the permutation p-values.
+- McInnes *et al.* (2018), [UMAP: Uniform Manifold Approximation and
+  Projection](https://doi.org/10.21105/joss.00861), describes the nonlinear
+  two-dimensional projection used only for visual inspection.
+
+### Software documentation
+
+- Data objects and input: [AnnData](https://anndata.readthedocs.io/en/stable/)
+  and [Scanpy `read_h5ad`](https://scanpy.readthedocs.io/en/stable/generated/scanpy.read_h5ad.html).
+- Tables and numerical operations: [pandas](https://pandas.pydata.org/docs/)
+  and [NumPy](https://numpy.org/doc/stable/).
+- Hierarchical clustering: [SciPy `linkage`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html).
+- Scaling and dimension reduction: scikit-learn
+  [`StandardScaler`](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html),
+  [`RobustScaler`](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html)
+  and [PCA](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html).
+- Reliability metrics: scikit-learn
+  [`silhouette_score`](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.silhouette_score.html)
+  and [`adjusted_rand_score`](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.adjusted_rand_score.html),
+  with pandas [`Series.corr`](https://pandas.pydata.org/docs/reference/api/pandas.Series.corr.html)
+  for Spearman correlation.
+- Two-dimensional visualisation: [UMAP documentation](https://umap-learn.readthedocs.io/en/latest/)
+  and [UMAP parameter guide](https://umap-learn.readthedocs.io/en/latest/parameters.html).
+- Figures and interface: [Matplotlib](https://matplotlib.org/stable/),
+  [seaborn](https://seaborn.pydata.org/) and
+  [Streamlit](https://docs.streamlit.io/).
+- Configuration files: [PyYAML documentation](https://pyyaml.org/wiki/PyYAMLDocumentation).
+
+The declared software dependencies and minimum versions are recorded in
+[`requirements.txt`](requirements.txt).
