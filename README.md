@@ -82,7 +82,7 @@ Because all niche abundances from one tumour sum to one, they are transformed
 with the centred log-ratio (CLR):
 
 $$
-\operatorname{CLR}(p_{tn})=\log\left(
+\mathrm{CLR}(p_{tn})=\log\left(
 \frac{p_{tn}+\varepsilon}
 {\left[\prod_{m=1}^{N}(p_{tm}+\varepsilon)\right]^{1/N}}
 \right).
@@ -92,7 +92,7 @@ Here, $\varepsilon$ is a small pseudocount used when an abundance is zero. Each
 feature is first expressed relative to its variation among primary tumours:
 
 $$
-x^*_{tnf}=\frac{x_{tnf}}{\sigma_{f,\mathrm{primary}}}.
+x^{\ast}_{tnf}=\frac{x_{tnf}}{\sigma_{f,\mathrm{primary}}}.
 $$
 
 A treated tumour is then compared with the mean primary value from the same
@@ -100,7 +100,7 @@ batch. For treatment stage $r$, this gives
 
 $$
 \Delta_{nfr}=\frac{1}{|T_r|}\sum_{t\in T_r}
-\left(x^*_{tnf}-\overline{x}^*_{nf,\mathrm{primary},b(t)}\right),
+\left(x^{\ast}_{tnf}-\overline{x}^{\ast}_{nf,\mathrm{primary},b(t)}\right),
 $$
 
 where $T_r$ is the set of treated tumours at stage $r$ and $b(t)$ is the batch
@@ -189,7 +189,8 @@ For niche $i$, $a(i)$ is its mean distance from the other niches in its own
 group. The value $b(i)$ is the smallest mean distance to any other group:
 
 $$
-a(i)=\frac{1}{|C_i|-1}\sum_{j\in C_i,\,j\ne i}d(i,j),
+a(i)=\frac{1}{|C_i|-1}
+\sum_{\substack{j\in C_i\\j\ne i}}d(i,j),
 \qquad
 b(i)=\min_{C\ne C_i}\frac{1}{|C|}\sum_{j\in C}d(i,j).
 $$
@@ -288,7 +289,7 @@ For $B=1000$ bootstrap refits, pairwise consensus is calculated as
 
 $$
 C_{ij}=\frac{1}{B}\sum_{b=1}^{B}
-\mathbb{1}\!\left(c_i^{(b)}=c_j^{(b)}\right).
+\mathbf{1}\left[c_i^{(b)}=c_j^{(b)}\right].
 $$
 
 $C_{ij}=1$ means niches $i$ and $j$ remain together in every refit. The
@@ -296,8 +297,9 @@ stability of niche $i$ is the mean consensus with the other niches assigned to
 its final group $G_i$:
 
 $$
-\operatorname{stability}(i)=
-\frac{1}{|G_i|-1}\sum_{j\in G_i,\,j\ne i}C_{ij}.
+\mathrm{Stability}_i=
+\frac{1}{|G_i|-1}
+\sum_{\substack{j\in G_i\\j\ne i}}C_{ij}.
 $$
 
 The adjusted Rand index uses the contingency table between two complete
@@ -318,7 +320,7 @@ With $I$ as the observed pair agreement and $E$ as the agreement expected by
 chance,
 
 $$
-\operatorname{ARI}=\frac{I-E}{\tfrac{1}{2}(A+B)-E}.
+\mathrm{ARI}=\frac{I-E}{\tfrac{1}{2}(A+B)-E}.
 $$
 
 This chance correction is why ARI is more informative than simply counting the
@@ -336,7 +338,7 @@ above:
 
 $$
 p=\frac{1+\sum_{b=1}^{B}
-\mathbb{1}\!\left(S_b^{\mathrm{perm}}\ge S_\mathrm{obs}\right)}{B+1}.
+\mathbf{1}\left[S_b^{\mathrm{perm}}\ge S_\mathrm{obs}\right]}{B+1}.
 $$
 
 ## Result
