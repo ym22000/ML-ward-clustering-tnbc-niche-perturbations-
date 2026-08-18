@@ -6,6 +6,12 @@ __pycache__/
 data/raw/*
 !data/raw/README.md
 results/figures/*
-results/tables/*
 !results/figures/.gitkeep
+!results/figures/*.png
+!results/figures/*.pptx
+results/figures/*.inspect.ndjson
+
+results/tables/*
 !results/tables/.gitkeep
+!results/tables/*.csv
+!results/tables/*.json

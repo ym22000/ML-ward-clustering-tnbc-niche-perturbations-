@@ -1,0 +1,18 @@
+{
+  "selected_k": 2,
+  "silhouette": 0.4392339369567014,
+  "pca_variance_2d": 0.8024261556680874,
+  "mean_stability": 1.0,
+  "stable_niches": 11,
+  "mean_leave_one_tumour_out_ari": 1.0,
+  "minimum_feature_sensitivity_ari": 1.0,
+  "validation_treatment_ari": 1.0,
+  "median_validation_spearman": 0.8139130434782607,
+  "validation_ari_permutation_p": 0.0021995600879824036,
+  "validation_spearman_permutation_p": 0.0001999600079984003,
+  "reliability": "robust for exploration; not externally validated",
+  "model": "batch-matched compositional consensus clustering",
+  "consensus_pac": 0.0,
+  "cluster_permutation_p": 0.0001999600079984003,
+  "null_silhouette_95th": 0.13518048110561154
+}

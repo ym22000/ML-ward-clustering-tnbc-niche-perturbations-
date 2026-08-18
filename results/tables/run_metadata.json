@@ -1,0 +1,22 @@
+{
+  "source": "data\\raw\\extracted\\visium_mouse\\processed\\mouse_main",
+  "n_spots": 27931,
+  "n_samples": 13,
+  "n_niches": 11,
+  "stages": [
+    "primary",
+    "mrd7",
+    "mrd12",
+    "relapsed"
+  ],
+  "treatment": "cisplatin_6mg/kg",
+  "parental_tumours": [
+    "2.1"
+  ],
+  "samples_per_stage": {
+    "primary": 6,
+    "mrd12": 3,
+    "mrd7": 2,
+    "relapsed": 2
+  }
+}
