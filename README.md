@@ -58,6 +58,62 @@ eight measurements at three stages, or 24 contrasts. The 24 columns are
 standardised before clustering so one measurement cannot dominate only because
 its numerical scale is larger.
 
+This remains a bioinformatics project rather than a mathematics exercise. The
+formulas below are included because they make each data transformation explicit
+and help explain exactly what enters the model.
+
+For tumour $t$, niche $n$ and molecular feature $f$, the weighted tumour-level
+profile is
+
+$$
+x_{tnf}=\frac{\sum_{s=1}^{S_t} w_{sn}x_{sf}}
+{\sum_{s=1}^{S_t} w_{sn}},
+$$
+
+where $s$ denotes a Visium spot, $w_{sn}$ is its continuous Chrysalis weight for
+niche $n$, and $x_{sf}$ is its feature value. The corresponding relative niche
+abundance is
+
+$$
+p_{tn}=\frac{\sum_s w_{sn}}{\sum_m\sum_s w_{sm}}.
+$$
+
+Because all niche abundances from one tumour sum to one, they are transformed
+with the centred log-ratio (CLR):
+
+$$
+\operatorname{CLR}(p_{tn})=\log\left(
+\frac{p_{tn}+\varepsilon}
+{\left[\prod_{m=1}^{N}(p_{tm}+\varepsilon)\right]^{1/N}}
+\right).
+$$
+
+Here, $\varepsilon$ is a small pseudocount used when an abundance is zero. Each
+feature is first expressed relative to its variation among primary tumours:
+
+$$
+x^*_{tnf}=\frac{x_{tnf}}{\sigma_{f,\mathrm{primary}}}.
+$$
+
+A treated tumour is then compared with the mean primary value from the same
+batch. For treatment stage $r$, this gives
+
+$$
+\Delta_{nfr}=\frac{1}{|T_r|}\sum_{t\in T_r}
+\left(x^*_{tnf}-\overline{x}^*_{nf,\mathrm{primary},b(t)}\right),
+$$
+
+where $T_r$ is the set of treated tumours at stage $r$ and $b(t)$ is the batch
+of tumour $t$. Finally, each of the 24 contrast columns is standardised across
+niches:
+
+$$
+z_{nj}=\frac{\Delta_{nj}-\mu_j}{\sigma_j}.
+$$
+
+The resulting matrix $Z\in\mathbb{R}^{11\times24}$ is the direct input to the
+unsupervised model.
+
 ## Unsupervised model
 
 ![Ward clustering model choice](assets/readme/model_choice_explainer.png)
@@ -80,6 +136,40 @@ no hierarchy. A Gaussian mixture estimates too many covariance parameters for
 11 objects. Density clustering is unreliable with so few points, and a neural
 network would mainly memorise them.
 
+The model receives only the matrix $Z$ and produces one group index for each
+niche:
+
+$$
+Z\in\mathbb{R}^{11\times24}
+\quad\longrightarrow\quad
+c=(c_1,\ldots,c_{11}),\qquad c_i\in\{1,\ldots,k\}.
+$$
+
+There is no known target value $y$ to predict. Ward clustering starts with one
+niche per group and repeatedly merges the pair $A,B$ that minimises
+
+$$
+\Delta(A,B)=\frac{|A||B|}{|A|+|B|}
+\left\|\boldsymbol{\mu}_A-\boldsymbol{\mu}_B\right\|_2^2,
+$$
+
+where $|A|$ and $|B|$ are group sizes and $\boldsymbol{\mu}_A$ and
+$\boldsymbol{\mu}_B$ are their mean 24-dimensional profiles. This quantity is
+the increase in total within-group squared variation caused by the merge.
+
+PCA does not change these assignments. It finds directions
+$\mathbf{v}_\ell$ satisfying
+
+$$
+\frac{Z^\mathsf{T}Z}{n-1}\mathbf{v}_\ell
+=\lambda_\ell\mathbf{v}_\ell,
+\qquad
+\mathbf{t}_\ell=Z\mathbf{v}_\ell,
+$$
+
+then uses the first two score vectors $\mathbf{t}_1$ and $\mathbf{t}_2$ as the
+two axes of the PCA plots.
+
 ## Selecting the number of patterns
 
 ![Ward solutions from k=2 to k=6](assets/readme/clustering_k_comparison.png)
@@ -94,6 +184,26 @@ The decision combines separation and minimum cluster size. `k = 2` has the large
 (`0.439`) and balanced groups of six and five niches. Larger values reduce the
 silhouette and create groups of only one or two niches, which are not credible
 macro-patterns here.
+
+For niche $i$, $a(i)$ is its mean distance from the other niches in its own
+group. The value $b(i)$ is the smallest mean distance to any other group:
+
+$$
+a(i)=\frac{1}{|C_i|-1}\sum_{j\in C_i,\,j\ne i}d(i,j),
+\qquad
+b(i)=\min_{C\ne C_i}\frac{1}{|C|}\sum_{j\in C}d(i,j).
+$$
+
+Its silhouette is therefore
+
+$$
+s(i)=\frac{b(i)-a(i)}{\max\{a(i),b(i)\}},
+\qquad
+S=\frac{1}{n}\sum_{i=1}^{n}s(i).
+$$
+
+The reported value `0.439` is the mean $S$ over all 11 niches. The formula
+rewards small distances within a group and large distances between groups.
 
 ![Detailed selected k=2 solution](assets/readme/clustering_k2_detail.png)
 
@@ -173,6 +283,61 @@ not test-set accuracy, and TAC is a related treatment arm from the same study.
 - **Permutation p-value** shuffles features within columns 5,000 times and asks
   how often random data reach the observed best silhouette. Here
   `p = (0 + 1) / (5000 + 1) = 0.0002`.
+
+For $B=1000$ bootstrap refits, pairwise consensus is calculated as
+
+$$
+C_{ij}=\frac{1}{B}\sum_{b=1}^{B}
+\mathbb{1}\!\left(c_i^{(b)}=c_j^{(b)}\right).
+$$
+
+$C_{ij}=1$ means niches $i$ and $j$ remain together in every refit. The
+stability of niche $i$ is the mean consensus with the other niches assigned to
+its final group $G_i$:
+
+$$
+\operatorname{stability}(i)=
+\frac{1}{|G_i|-1}\sum_{j\in G_i,\,j\ne i}C_{ij}.
+$$
+
+The adjusted Rand index uses the contingency table between two complete
+clusterings. If $n_{uv}$ is the number of niches shared by group $u$ in the
+first clustering and group $v$ in the second, with row sums $a_u$ and column
+sums $b_v$, then
+
+$$
+\begin{aligned}
+I &= \sum_{uv}\binom{n_{uv}}{2}, &
+A &= \sum_u\binom{a_u}{2},\\
+B &= \sum_v\binom{b_v}{2}, &
+E &= \frac{AB}{\binom{n}{2}}.
+\end{aligned}
+$$
+
+With $I$ as the observed pair agreement and $E$ as the agreement expected by
+chance,
+
+$$
+\operatorname{ARI}=\frac{I-E}{\tfrac{1}{2}(A+B)-E}.
+$$
+
+This chance correction is why ARI is more informative than simply counting the
+fraction of unchanged niche labels.
+
+For two response rankings without ties, Spearman correlation can be written as
+
+$$
+\rho_s=1-\frac{6\sum_{i=1}^{n}d_i^2}{n(n^2-1)},
+$$
+
+where $d_i$ is the difference between the two ranks for niche $i$. The generic
+permutation p-value uses the same finite-sample correction as the value reported
+above:
+
+$$
+p=\frac{1+\sum_{b=1}^{B}
+\mathbb{1}\!\left(S_b^{\mathrm{perm}}\ge S_\mathrm{obs}\right)}{B+1}.
+$$
 
 ## Result
 
