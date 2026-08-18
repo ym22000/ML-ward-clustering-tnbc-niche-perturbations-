@@ -1,0 +1,25 @@
+seed: 42
+baseline: primary
+stages: [primary, mrd7, mrd12, relapsed]
+n_clusters: 2
+n_bootstrap: 1000
+feature_dropout: 0.7
+validation_treatment: TAC_regimen
+exclude_niches: [N3, N6]
+features:
+  - emt
+  - proliferation
+  - hypoxia
+  - immune
+  - fibroblast
+  - macrophage
+  - tumour
+
+gene_sets:
+  emt: [Vim, Cdh2, Zeb1, Zeb2, Snai1, Snai2, Twist1, Fn1]
+  proliferation: [Mki67, Pcna, Top2a, Ccnb1, Cdk1]
+  hypoxia: [Hif1a, Vegfa, Slc2a1, Ldha, Pdk1, Ca9]
+  immune: [Ptprc, Cd3d, Cd3e, Cd68, Lst1]
+  fibroblast: [Col1a1, Col1a2, Col3a1, Dcn, Pdgfra]
+  macrophage: [Adgre1, Cd68, Csf1r, Lgals3, Lst1]
+  tumour: [Epcam, Krt8, Krt18, Krt19]

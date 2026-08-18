@@ -1,0 +1,11 @@
+__pycache__/
+.pytest_cache/
+.pptx_build/
+.tmp/
+.venv/
+data/raw/*
+!data/raw/README.md
+results/figures/*
+results/tables/*
+!results/figures/.gitkeep
+!results/tables/.gitkeep
