@@ -1,22 +1,36 @@
 # Spatial Breast Cancer Niche Clustering
 
-This project is a small re-analysis of the spatial transcriptomics data from
-Túrós *et al.* It was developed to learn how an unsupervised machine-learning
-result is built, tested and connected to biological evidence.
+Can tissue regions with similar responses to chemotherapy be found without
+giving the model any known group labels?
 
-The analysis asks whether niches with similar abundance and molecular changes
-after chemotherapy form reproducible response groups. It confirms the broad
-remodelling described by the paper; it does not claim a new mechanism.
+This project explores that question through a small re-analysis of the **spatial
+transcriptomics** data from Túrós *et al.* Spatial transcriptomics measures gene
+activity while keeping information about where each measurement came from in a
+tissue section. I built the project to apply **unsupervised machine learning**
+(methods that search for structure in data without a known answer to predict) to
+a concrete biological question.
+
+The analysis tests whether **niches** (tissue compartments with related cellular
+and molecular properties) that change in similar ways after chemotherapy form
+reproducible response groups. The result supports the broad tissue remodelling
+reported in the source paper. It does not establish a new biological mechanism.
 
 - Paper: [Nature Communications (2026)](https://doi.org/10.1038/s41467-026-74125-6)
 - Data: [Zenodo 15102983](https://doi.org/10.5281/zenodo.15102983)
 
 ## Data
 
-The mouse Visium files contain spatial coordinates, H&E images, continuous
-Chrysalis weights, cell2location estimates and pathway scores. The cisplatin
-analysis contains 27,931 spots from 13 tumours. N3 and N6 are removed as likely
-technical compartments, following the paper, leaving 11 biological niches.
+The input consists of mouse **Visium** files. Visium is a spatial-transcriptomics
+technology that divides a tissue section into small measured areas called
+spots. The files contain spatial coordinates, H&E images (haematoxylin-and-eosin
+stained tissue images used to inspect histology), continuous Chrysalis weights,
+cell2location estimates (computational estimates of cell-type abundance), and
+pathway scores (numerical summaries of related biological processes).
+
+The cisplatin analysis contains 27,931 spots from 13 tumours. Following the
+source paper, N3 and N6 are removed because they are likely technical
+compartments rather than biological niches. This leaves 11 biological niches
+for the machine-learning analysis.
 
 ## Workflow
 
@@ -25,11 +39,13 @@ technical compartments, following the paper, leaving 11 biological niches.
 *Figure 1. From deposited Visium sections to biologically interpreted response
 patterns.*
 
-Figure 1 follows the complete analysis from tissue measurements to response
-groups, stability checks and biological annotation. One tumour × niche profile
-is one biological observation. Treated tumours are compared with primary
-tumours from the same parental tumour and batch. The final matrix contains 11
-niches and 24 standardised stage–feature contrasts.
+Figure 1 follows the full reasoning path: tissue measurements become tumour-level
+profiles, the profiles become response groups, and the groups are checked before
+they receive a biological interpretation. One tumour × niche profile is treated
+as one **biological observation** (one independent unit used by the analysis).
+Treated tumours are compared with primary tumours from the same parental tumour
+and experimental batch. The final matrix contains 11 niches and 24 standardised
+stage–feature contrasts.
 
 ## From tissue spots to model input
 
@@ -38,29 +54,38 @@ niches and 24 standardised stage–feature contrasts.
 *Figure 2. Spatial distribution of the two response macro-patterns across the
 four treatment stages.*
 
-As shown in Figure 2, red marks the primary/recurrent-associated response group
-and blue marks the MRD-associated immune–stromal group. The four large panels
-show one complete stage series selected by a fixed rule; they are not
-longitudinal sections from one tumour. This spot-level view gives spatial
-context to the tumour-level profiles used by the model.
+As shown in Figure 2, red marks the primary/recurrent-associated response group,
+while blue marks the **MRD-associated** immune–stromal group. MRD means minimal
+residual disease: tumour cells and their surrounding tissue that remain after
+treatment. The four large panels show one complete stage series selected by a
+fixed rule; they are not repeated sections from the same tumour over time. This
+spot-level view gives spatial context to the tumour-level profiles used by the
+model.
 
-A Visium spot is a small measured tissue area containing several cells. The
-coloured circle is therefore not a single cell and not a definitive niche
-label. Chrysalis gives each spot continuous weights: one spot can partly belong
-to several niches. For each tumour and niche, the workflow computes a weighted
-mean of abundance and seven molecular measurements. Abundance is
-CLR-transformed because niche proportions are compositional.
+A Visium spot contains several cells. A coloured circle is therefore neither a
+single cell nor a definitive niche label. **Chrysalis** is the upstream method
+used by the authors to represent tissue compartments. It gives each spot
+continuous weights, so one spot can partly belong to several niches instead of
+being forced into only one.
 
-MRD7, MRD12 and recurrent tumours are then compared with same-batch primary
-tumours. This avoids treating thousands of spots from one section as thousands
-of independent biological replicates. The result is one trajectory per niche:
-eight measurements at three stages, or 24 contrasts. The 24 columns are
-standardised before clustering so one measurement cannot dominate only because
-its numerical scale is larger.
+For each tumour and niche, the workflow calculates a **weighted mean** (an
+average in which spots contribute according to their niche weights) for
+abundance and seven molecular measurements. Abundance is transformed with CLR,
+or centred log-ratio, because the niche proportions are **compositional**: they
+are parts of one whole and must sum to one.
 
-This remains a bioinformatics project rather than a mathematics exercise. The
-formulas below are included because they make each data transformation explicit
-and help explain exactly what enters the model.
+The two residual-disease stages, MRD7 and MRD12, and recurrent tumours are then
+compared with same-batch primary tumours. This prevents **pseudoreplication**
+(incorrectly treating many spots from the same tumour as many independent
+tumours). The result is one trajectory per niche: eight measurements at three
+stages, or 24 contrasts. A contrast is a difference between a treated condition
+and its matched primary reference. The 24 columns are **standardised** (put on a
+common numerical scale) before clustering, so one measurement cannot dominate
+only because its raw values are larger.
+
+The formulas below do not add a separate mathematical layer to the project.
+They make each transformation explicit, so the biological meaning of every row
+and column entering the model can be checked.
 
 For tumour $t$, niche $n$ and molecular feature $f$, the weighted tumour-level
 profile is
@@ -71,8 +96,9 @@ x_{tnf}=\frac{\sum_{s=1}^{S_t} w_{sn}x_{sf}}
 $$
 
 where $s$ denotes a Visium spot, $w_{sn}$ is its continuous Chrysalis weight for
-niche $n$, and $x_{sf}$ is its feature value. The corresponding relative niche
-abundance is
+niche $n$, and $x_{sf}$ is its **feature** value. A feature is one numerical
+measurement supplied to the model. The corresponding relative niche abundance
+is
 
 $$
 p_{tn}=\frac{\sum_s w_{sn}}{\sum_m\sum_s w_{sm}}.
@@ -88,8 +114,9 @@ $$
 \right).
 $$
 
-Here, $\varepsilon$ is a small pseudocount used when an abundance is zero. Each
-feature is first expressed relative to its variation among primary tumours:
+Here, $\varepsilon$ is a small **pseudocount** (a tiny added value that makes the
+logarithm defined when an abundance is zero). Each feature is first expressed
+relative to its variation among primary tumours:
 
 $$
 x^{\ast}_{tnf}=\frac{x_{tnf}}{\sigma_{f,\mathrm{primary}}}.
@@ -112,7 +139,7 @@ z_{nj}=\frac{\Delta_{nj}-\mu_j}{\sigma_j}.
 $$
 
 The resulting matrix $Z\in\mathbb{R}^{11\times24}$ is the direct input to the
-unsupervised model.
+unsupervised model: 11 niche rows described by 24 response columns.
 
 ## Unsupervised model
 
@@ -121,23 +148,35 @@ unsupervised model.
 *Figure 3. Dataset constraints and comparison of candidate unsupervised
 models.*
 
-Figure 3A summarises the small unlabelled 11 x 24 input. Figure 3B compares the
-main candidate methods and explains the choice of Ward clustering.
+Figure 3A summarises the small unlabelled 11 × 24 input. **Unlabelled** means
+that no correct response group is supplied in advance. Figure 3B compares the
+main candidate methods and explains why Ward clustering is selected.
 
-There are no known response-group labels, so this is unsupervised learning. Ward
-hierarchical clustering is suited to the very small input of 11 objects: it is
-deterministic, needs no train/test classifier split and leaves a tree in which
-every merge can be checked. At each step it joins the pair producing the smallest increase
-in within-cluster variance. PCA is used only to display the 24-dimensional
-result; clustering itself uses all 24 standardised contrasts.
+There are no known response-group labels, so this is unsupervised learning.
+**Hierarchical clustering** builds a tree by progressively joining similar
+objects. Ward's method is well suited to this very small input of 11 niches: it
+is deterministic (the same input gives the same result), needs no train/test
+classifier split (a split used when training a model to predict known classes),
+and leaves a **dendrogram** (a tree showing every merge) that can be inspected.
+At each step, it joins the pair that causes the smallest increase in
+within-cluster variance, meaning the smallest increase in variation inside the
+new group.
 
-K-means is a reasonable sensitivity check but has random starting centres and
-no hierarchy. A Gaussian mixture estimates too many covariance parameters for
-11 objects. Density clustering is unreliable with so few points, and a neural
-network would mainly memorise them.
+**PCA, or principal component analysis**, is used only to display the
+24-dimensional result on two axes. PCA summarizes the main directions of
+variation, but the clustering itself still uses all 24 standardised contrasts.
 
-The model receives only the matrix $Z$ and produces one group index for each
-niche:
+The alternatives are useful, but less appropriate for the main analysis.
+K-means is a reasonable sensitivity check, yet it starts from random group
+centres and does not produce a hierarchy. A Gaussian mixture would estimate too
+many covariance parameters (values describing how features vary together) from
+only 11 objects. Density clustering is unreliable with so few points, and a
+neural network would have enough flexibility to memorize them rather than learn
+a general pattern. Ward clustering is therefore chosen because its assumptions
+and output match the size and purpose of this dataset.
+
+The model receives only the matrix $Z$ and produces one **cluster index** (the
+numeric group assigned by the algorithm) for each niche:
 
 $$
 Z\in\mathbb{R}^{11\times24}
@@ -154,10 +193,14 @@ $$
 $$
 
 where $|A|$ and $|B|$ are group sizes and $\boldsymbol{\mu}_A$ and
-$\boldsymbol{\mu}_B$ are their mean 24-dimensional profiles. This quantity is
-the increase in total within-group squared variation caused by the merge.
+$\boldsymbol{\mu}_B$ are their mean 24-dimensional profiles. The Euclidean norm
+$\|\cdot\|_2$ measures the straight-line distance between these mean profiles.
+The complete quantity is the increase in total within-group squared variation
+caused by the merge.
 
-PCA does not change these assignments. It finds directions
+PCA does not change these assignments. It finds new directions, called
+principal components, that capture decreasing amounts of variation. Formally,
+it finds vectors
 $\mathbf{v}_\ell$ satisfying
 
 $$
@@ -177,13 +220,16 @@ two axes of the PCA plots.
 *Figure 4. Ward solutions obtained by cutting the same hierarchical tree from
 `k = 2` to `k = 6`.*
 
-Figure 4 compares the same Ward tree at `k = 2–6`; the PCA panels show the
-groups in two dimensions, while clustering uses all 24 contrasts. PCA
-(principal component analysis) is only a simpler view of the main variation.
-The decision combines separation and minimum cluster size. `k = 2` has the largest silhouette
-(`0.439`) and balanced groups of six and five niches. Larger values reduce the
-silhouette and create groups of only one or two niches, which are not credible
-macro-patterns here.
+Figure 4 compares the same Ward tree after cutting it into `k = 2–6` groups,
+where `k` is the requested number of clusters. The PCA panels show these groups
+in two dimensions, while Ward still uses all 24 contrasts. The selection combines
+group separation with minimum cluster size.
+
+`k = 2` has the largest **silhouette score** (`0.439`) and balanced groups of
+six and five niches. The silhouette measures whether an object is closer to its
+own group than to another group. Larger values of `k` reduce this score and
+create groups containing only one or two niches, which are too small to support
+credible response macro-patterns here.
 
 For niche $i$, $a(i)$ is its mean distance from the other niches in its own
 group. The value $b(i)$ is the smallest mean distance to any other group:
@@ -204,7 +250,9 @@ S=\frac{1}{n}\sum_{i=1}^{n}s(i).
 $$
 
 The reported value `0.439` is the mean $S$ over all 11 niches. The formula
-rewards small distances within a group and large distances between groups.
+rewards small distances within a group and large distances between groups. It
+supports `k = 2`, but it is evidence about separation rather than proof that two
+groups are the only possible biological description.
 
 ![Detailed selected k=2 solution](assets/readme/clustering_k2_detail.png)
 
@@ -212,15 +260,24 @@ rewards small distances within a group and large distances between groups.
 matrix.*
 
 Figure 5A shows the complete Ward dendrogram and its two main branches. Figure
-5B shows the full 11 × 24 matrix used by the model; the vivid blue-to-red
-gradient represents relative decreases and increases after standardisation.
-Biological names are added only after these numeric groups are fixed.
+5B shows the full 11 × 24 matrix used by the model. This **heatmap** represents
+each numerical value with a colour: vivid blue indicates a relative decrease,
+and vivid red indicates a relative increase after standardisation. Biological
+names are added only after the numeric groups are fixed, which prevents the
+names from influencing the clustering.
 
 ## Biological annotation
 
-Biological names are assigned after clustering. They come from the paper's
-cell-type associations, niche gene programmes, histology and treatment response.
-The original `N` identifiers remain visible for provenance.
+The algorithm returns numbers, not biological explanations. Biological names
+are therefore assigned only after clustering by comparing each numeric group
+with the paper's cell-type associations, niche gene programmes, histology, and
+treatment response. This step is **biological annotation** (connecting a
+data-derived pattern to existing biological evidence). The original `N`
+identifiers remain visible for **provenance**, meaning that every interpretation
+can be traced back to its source niche.
+
+In the table, **TME** means tumour microenvironment: the non-tumour cells,
+extracellular material, and signals surrounding tumour cells.
 
 | ID | Biological name | Class | Main programme or context |
 |---|---|---|---|
@@ -245,12 +302,14 @@ The complete annotation table is written to
 
 *Figure 6. Complementary checks of the selected two-group solution.*
 
-Figure 6A-C examines model choice, silhouette separation (how well each niche
-fits its group) and pairwise consensus (how often two niches remain together
-across repeated runs). Figure 6D tests robustness to tumour and feature
-removal, Figure 6E compares the cisplatin and TAC arms, and Figure 6F compares
-the observed result with shuffled data. They test different failure modes
-rather than predictive accuracy.
+Figure 6A–C examines model choice, silhouette separation (how well each niche
+fits its group), and pairwise consensus (how often two niches remain together
+across repeated analyses). Figure 6D tests **robustness** (whether the conclusion
+survives a controlled change) after removing one tumour or feature family.
+Figure 6E compares the cisplatin arm with the related TAC treatment regimen.
+Figure 6F compares the observed structure with shuffled data. These checks
+target different possible failure modes; they are not measures of predictive
+accuracy because this model does not predict known labels.
 
 | Check | Result |
 |---|---:|
@@ -264,15 +323,18 @@ rather than predictive accuracy.
 | Median cross-arm Spearman correlation (rank agreement) | 0.814 |
 | Cluster permutation test (comparison with shuffled data) | 0.0002 |
 
-These checks support the stability of a coarse two-pattern solution. They are
-not test-set accuracy, and TAC is a related treatment arm from the same study.
+Taken together, these checks support the stability of a coarse two-pattern
+solution. A **coarse solution** captures the broadest structure and does not
+claim that every niche inside a group behaves identically. The values are not
+test-set accuracy, and TAC is a related treatment arm from the same study rather
+than a fully independent external dataset.
 
 - **Silhouette** compares each niche's mean distance to its own group with its
   distance to the other group. Values near 1 indicate clear separation, near 0
   indicate a boundary, and negative values suggest possible misassignment.
-- **Consensus** is the fraction of 1,000 refits (new runs after resampling the
-  data) in which each pair of niches is placed together. It measures how often
-  the same groups return.
+- **Consensus** is the fraction of 1,000 **refits** (new analyses after
+  resampling the data) in which each pair of niches is placed together. It
+  measures how often the same groups return.
 - **Adjusted Rand index (ARI)** compares two complete groupings while
   correcting agreement expected by chance. `1` means identical groups;
   values near `0` mean chance-level agreement.
@@ -280,12 +342,16 @@ not test-set accuracy, and TAC is a related treatment arm from the same study.
   removing one tumour or one feature family. They test dependence on a single
   sample or measurement.
 - **Spearman correlation** compares the rank order of cisplatin and TAC response
-  trajectories for the same niche. It tests cross-arm agreement, not causality.
-- **Permutation p-value** shuffles features within columns 5,000 times and asks
-  how often random data reach the observed best silhouette. Here
+  trajectories for the same niche. Rank order means first, second, third, and so
+  on rather than the exact raw values. This tests cross-arm agreement, not
+  causality.
+- **Permutation p-value** shuffles features within columns 5,000 times to create
+  data with no preserved niche structure, then asks how often these random data
+  reach the observed best silhouette. Here
   `p = (0 + 1) / (5000 + 1) = 0.0002`.
 
-For $B=1000$ bootstrap refits, pairwise consensus is calculated as
+For $B=1000$ **bootstrap refits** (repeated analyses built from tumour-level
+samples drawn with replacement), pairwise consensus is calculated as
 
 $$
 C_{ij}=\frac{1}{B}\sum_{b=1}^{B}
@@ -302,10 +368,10 @@ $$
 \sum_{\substack{j\in G_i\\j\ne i}}C_{ij}.
 $$
 
-The adjusted Rand index uses the contingency table between two complete
-clusterings. If $n_{uv}$ is the number of niches shared by group $u$ in the
-first clustering and group $v$ in the second, with row sums $a_u$ and column
-sums $b_v$, then
+The adjusted Rand index uses a **contingency table** (a table counting how two
+sets of group assignments overlap). If $n_{uv}$ is the number of niches shared
+by group $u$ in the first clustering and group $v$ in the second, with row sums
+$a_u$ and column sums $b_v$, then
 
 $$
 \begin{aligned}
@@ -326,15 +392,17 @@ $$
 This chance correction is why ARI is more informative than simply counting the
 fraction of unchanged niche labels.
 
-For two response rankings without ties, Spearman correlation can be written as
+For two response rankings without ties (equal ranks), Spearman correlation can
+be written as
 
 $$
 \rho_s=1-\frac{6\sum_{i=1}^{n}d_i^2}{n(n^2-1)},
 $$
 
 where $d_i$ is the difference between the two ranks for niche $i$. The generic
-permutation p-value uses the same finite-sample correction as the value reported
-above:
+permutation p-value uses the same **finite-sample correction** (adding one to
+avoid reporting an impossible exact zero from a limited number of shuffles) as
+the value reported above:
 
 $$
 p=\frac{1+\sum_{b=1}^{B}
@@ -348,12 +416,22 @@ $$
 | MRD-associated immune–stromal remodelling | N1, N7, N9, N11, N12 | immune, macrophage, humoral and stromal programmes become prominent during residual disease |
 | Primary/recurrent tissue architecture | N0, N2, N4, N5, N8, N10 | mainly tumour and peritumour programmes diminish or remodel during MRD and return at recurrence |
 
-N2 is a required biological caveat. The original study describes the EMT niche
-as persistent and chemotherapy-tolerant. Its placement in the second ML group
-reflects similarity of the complete multivariate trajectory, not proof that its
-abundance strongly contracts.
+The model separates two broad response trajectories. One group is most closely
+associated with immune and stromal remodelling during residual disease. The
+other mainly follows primary and recurrent tissue architecture.
+
+N2 is an important biological caveat. **EMT, or epithelial-to-mesenchymal
+transition**, is a cell-state programme linked here to motility, plasticity, and
+treatment tolerance. The original study describes the EMT niche as persistent
+and chemotherapy-tolerant. Its placement in the second machine-learning group
+means that its complete 24-feature trajectory is numerically more similar to
+that group. It is not proof that N2 abundance strongly contracts.
 
 ## Project layout
+
+The repository separates source code, tests, input data, generated results, and
+README figures. This makes it possible to inspect one part of the workflow
+without mixing it with the others.
 
 ```text
 niche_perturbation_patterns/
@@ -383,6 +461,8 @@ niche_perturbation_patterns/
 
 ## Run
 
+Create the results and open the interactive application with:
+
 ```powershell
 cd C:\Users\pcyou\Desktop\bioinfo_llm\niche_perturbation_patterns
 python -m pip install -r requirements.txt
@@ -390,24 +470,37 @@ python run_analysis.py --h5ad-dir data\raw\extracted\visium_mouse\processed\mous
 python -m streamlit run app.py
 ```
 
-The app opens at `http://localhost:8507`.
+The analysis command rebuilds the perturbation profiles, clustering, checks,
+tables, and figures from the processed input. **Streamlit** is a Python library
+for small interactive data applications; the final command opens the app at
+`http://localhost:8507`.
 
 ## Limits
 
-- No clinical classifier is trained.
+This is a reproducible learning project and a small research re-analysis, not a
+clinical decision system. Its main limits are:
+
+- No clinical classifier is trained. The output groups niches; it does not
+  predict treatment response for a new patient.
 - Biological annotation is interpretive and does not alter the clustering.
-- Cell-type summaries used as ML features cannot serve as independent validation.
-- Histology and paper-derived gene programmes provide the less circular evidence.
-- The second treatment arm is internal rather than external validation.
+- Cell-type summaries used as machine-learning features cannot also serve as
+  independent validation, because they already contribute information to the
+  model input.
+- Histology and paper-derived gene programmes provide less circular evidence,
+  although they still come from the same study.
+- The second treatment arm is internal rather than external validation. A new
+  cohort from another experiment would provide a stronger test of
+  generalisation.
 
 ## References and documentation
 
 The workflow uses the processed mouse Visium objects released with the study.
-It does not rerun Chrysalis or cell2location: their compartment scores,
-cell-type estimates and biological annotations were produced upstream by the
+It does not rerun Chrysalis or cell2location. Their compartment scores,
+cell-type estimates, and biological annotations were produced upstream by the
 authors and are treated here as input data. The perturbation profiles, Ward
-clustering and reliability analyses are implemented independently in this
-repository.
+clustering, and reliability analyses are implemented independently in this
+repository. This distinction makes clear which results are reused and which are
+recomputed here.
 
 ### Study and data
 
@@ -415,7 +508,7 @@ repository.
   mouse and human BRCA1-deficient mammary tumours and breast
   cancer](https://doi.org/10.1038/s41467-026-74125-6), *Nature
   Communications*. This is the source paper for the biological question,
-  experimental design and niche annotations.
+  experimental design, and niche annotations.
 - [Processed spatial transcriptomics data](https://doi.org/10.5281/zenodo.15102983),
   Zenodo record 15102983. The mouse Visium `.h5ad` files analysed in this
   repository come from this deposit.
@@ -428,13 +521,17 @@ repository.
   transcriptomics with archetypal
   analysis](https://doi.org/10.1038/s42003-024-07165-7), *Communications
   Biology*. Chrysalis generated the continuous niche scores available in the
-  processed objects.
+  processed objects; a continuous score allows partial niche membership.
 - Kleshchevnikov *et al.* (2022), [Cell2location maps fine-grained cell types
   in spatial transcriptomics](https://doi.org/10.1038/s41587-021-01139-4),
   *Nature Biotechnology*. Cell2location generated the cell-type estimates used
   by the original study to help interpret the niches.
 
 ### Statistical methods
+
+These references define the main statistical tools used in the workflow. They
+are included so that each model choice and reliability check can be connected
+to its original method rather than treated as a software option.
 
 - Ward (1963), [Hierarchical Grouping to Optimize an Objective
   Function](https://doi.org/10.1080/01621459.1963.10500845), introduced Ward's
@@ -468,6 +565,9 @@ repository.
 
 ### Software documentation
 
+The following documentation describes the Python tools used to store the data,
+perform the analysis, and create the figures and application.
+
 - Data objects and input: [AnnData](https://anndata.readthedocs.io/en/stable/)
   and [Scanpy `read_h5ad`](https://scanpy.readthedocs.io/en/stable/generated/scanpy.read_h5ad.html).
 - Tables and numerical operations: [pandas](https://pandas.pydata.org/docs/)
@@ -491,7 +591,7 @@ repository.
 
 ### Reproducible software environment
 
-The analyses, figures and application were generated and checked with Python
+The analyses, figures, and application were generated and checked with Python
 3.14.0 and the following direct dependencies:
 
 ```text
@@ -501,8 +601,8 @@ Scanpy 1.12             scikit-learn 1.7.2   SciPy 1.16.3
 seaborn 0.13.2          Streamlit 1.61.1     umap-learn 0.5.11
 ```
 
-These exact runtime versions are pinned in [`requirements.txt`](requirements.txt).
-The test environment adds pytest 9.1.1 through
-[`requirements-dev.txt`](requirements-dev.txt). This records the environment
-used for the reported results instead of silently allowing later package
-versions to change the analysis.
+These exact runtime versions are **pinned** (fixed to the versions used here) in
+[`requirements.txt`](requirements.txt). The test environment adds pytest 9.1.1
+through [`requirements-dev.txt`](requirements-dev.txt). Recording the complete
+environment helps another person reproduce the reported result and prevents a
+later package update from silently changing the analysis.
