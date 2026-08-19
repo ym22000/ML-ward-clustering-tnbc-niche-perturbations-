@@ -464,7 +464,8 @@ niche_perturbation_patterns/
 Create the results and open the interactive application with:
 
 ```powershell
-cd C:\Users\pcyou\Desktop\bioinfo_llm\niche_perturbation_patterns
+git clone https://github.com/ym22000/ML-ward-clustering-tnbc-niche-perturbations-.git
+cd ML-ward-clustering-tnbc-niche-perturbations-
 python -m pip install -r requirements.txt
 python run_analysis.py --h5ad-dir data\raw\extracted\visium_mouse\processed\mouse_main --treatment cisplatin_6mg/kg
 python -m streamlit run app.py
