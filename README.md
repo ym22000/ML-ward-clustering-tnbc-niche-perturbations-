@@ -1,12 +1,12 @@
 # Spatial Breast Cancer Niche Clustering
 
-Can tissue regions with similar responses to chemotherapy be found without
-giving the model any known group labels?
+This project identifies tissue regions with similar chemotherapy responses
+without using known group labels.
 
-This project explores that question through a small re-analysis of the **spatial
+The analysis is a small re-analysis of the **spatial
 transcriptomics** data from Túrós *et al.* Spatial transcriptomics measures gene
 activity while keeping information about where each measurement came from in a
-tissue section. I built the project to apply **unsupervised machine learning**
+tissue section. The project applies **unsupervised machine learning**
 (methods that search for structure in data without a known answer to predict) to
 a concrete biological question.
 
