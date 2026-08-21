@@ -98,7 +98,7 @@ macro-pattern label from being mistaken for an individual-niche abundance test.
 
 The workflow produces annotated tissue maps, an all-niche UMAP, a perturbation
 heatmap, PCA, temporal trajectories, uncertainty intervals, model diagnostics
-and an interactive Streamlit explorer.
+and reproducibility tables.
 
 | File | Role |
 |---|---|
@@ -108,4 +108,3 @@ and an interactive Streamlit explorer.
 | `src/annotations.py` | published biological annotation layer |
 | `src/figures.py` | analysis figures |
 | `src/readme_figures.py` | large repository figures |
-| `app.py` | interactive biological and model explorer |

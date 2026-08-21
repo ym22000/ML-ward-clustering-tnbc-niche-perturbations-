@@ -440,7 +440,6 @@ niche_perturbation_patterns/
 ├── FIGURES.md
 ├── RESULTS.md
 ├── run_analysis.py
-├── app.py
 ├── config.yaml
 ├── src/
 │   ├── annotations.py
@@ -461,20 +460,17 @@ niche_perturbation_patterns/
 
 ## Run
 
-Create the results and open the interactive application with:
+Create the results with:
 
 ```powershell
 git clone https://github.com/ym22000/ML-ward-clustering-tnbc-niche-perturbations-.git
 cd ML-ward-clustering-tnbc-niche-perturbations-
 python -m pip install -r requirements.txt
 python run_analysis.py --h5ad-dir data\raw\extracted\visium_mouse\processed\mouse_main --treatment cisplatin_6mg/kg
-python -m streamlit run app.py
 ```
 
 The analysis command rebuilds the perturbation profiles, clustering, checks,
-tables, and figures from the processed input. **Streamlit** is a Python library
-for small interactive data applications; the final command opens the app at
-`http://localhost:8507`.
+tables, and figures from the processed input.
 
 ## Limits
 
@@ -585,21 +581,20 @@ perform the analysis, and create the figures and application.
   for Spearman correlation.
 - Two-dimensional visualisation: [UMAP documentation](https://umap-learn.readthedocs.io/en/latest/)
   and [UMAP parameter guide](https://umap-learn.readthedocs.io/en/latest/parameters.html).
-- Figures and interface: [Matplotlib](https://matplotlib.org/stable/),
-  [seaborn](https://seaborn.pydata.org/) and
-  [Streamlit](https://docs.streamlit.io/).
+- Figures: [Matplotlib](https://matplotlib.org/stable/) and
+  [seaborn](https://seaborn.pydata.org/).
 - Configuration files: [PyYAML documentation](https://pyyaml.org/wiki/PyYAMLDocumentation).
 
 ### Reproducible software environment
 
-The analyses, figures, and application were generated and checked with Python
+The analyses and figures were generated and checked with Python
 3.14.0 and the following direct dependencies:
 
 ```text
 anndata 0.12.9          matplotlib 3.10.7    numpy 2.3.5
 pandas 2.3.3            Pillow 12.0.0         PyYAML 6.0.3
 Scanpy 1.12             scikit-learn 1.7.2   SciPy 1.16.3
-seaborn 0.13.2          Streamlit 1.61.1     umap-learn 0.5.11
+seaborn 0.13.2          umap-learn 0.5.11
 ```
 
 These exact runtime versions are **pinned** (fixed to the versions used here) in
